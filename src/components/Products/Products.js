@@ -1,21 +1,22 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useContext } from "react";
 import axios from "axios";
 import { Link } from "react-router-dom";
 import "./Products.css";
+import { MyContext } from '../MyContext'; 
 
 const url ='http://127.0.0.1:8000/api/' 
-const paginaUrl = "http://localhost:3000/"
 let filtrosMarca = []
 let filtrosTipo = []
 let search = ""
 
 const Products = () => {
 
+    const {user} = useContext(MyContext);
     const [productos, setProductos] = useState([]);
     const [marcas, setMarcas] = useState([]);
     const [tipos, setTipos] = useState([]);
     const [results, setResults] = useState([]);
-
+    const [talles, setTalles] = useState([]);
 
      //función de búsqueda
     const searcher = (e) => {
@@ -68,6 +69,7 @@ const Products = () => {
         getMarcas();
         getTipos();
         getProductos();
+        getTalles();
     },[]);
 
     const getProductos = async() =>{
@@ -86,22 +88,43 @@ const Products = () => {
         setTipos(respuesta.data);
     }
 
+    const getTalles = async() =>{
+        const respuesta = await axios.get(url + "talles");
+        setTalles(respuesta.data);
+    }
+
+    const añadir = (e) => {
+
+
+        axios.post(url + "compras/añadir", {
+            email: user.email,
+            producto_id: e.target.value,
+            //talle:
+            //cantidad:
+          })
+          .then(function (response){
+              console.log(response.data);
+          })
+          .catch(function (error){
+              console.log(error)
+          })
+    }
 
     return (
-        <div class="container-fluid row flex" style={{margin: '1rem'}}>
-            <nav class="col-xl-2 col-lg-3 col-md-4 col-sm-12">
-                <div class="accordion" id="Marcas">
-                    <div class="accordion-item">
-                        <h2 class="accordion-header" id="headingOne">
-                            <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#collapseOne" aria-expanded="true" aria-controls="collapseOne">
+        <div className="container-fluid row flex" style={{margin: '1rem'}}>
+            <nav className="col-xl-2 col-lg-3 col-md-4 col-sm-12">
+                <div className="accordion" id="Marcas">
+                    <div className="accordion-item">
+                        <h2 className="accordion-header" id="headingOne">
+                            <button className="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#collapseOne" aria-expanded="true" aria-controls="collapseOne">
                                 Marcas
                             </button>
                         </h2>
                         {marcas.map((marca) =>(
                             <div id="collapseOne" class="accordion-collapse collapse show" aria-labelledby="headingOne" data-bs-parent="#accordionExample">
-                                <div class="accordion-body">
-                                    <ul class="list-group list-group-flush">
-                                        <li class="list-group-item">
+                                <div className="accordion-body">
+                                    <ul className="list-group list-group-flush">
+                                        <li className="list-group-item">
                                             <input 
                                             onChange={filtrarMarca}
                                             type='checkbox'
@@ -120,18 +143,18 @@ const Products = () => {
                         }
                     </div>
                 </div>
-                <div class="accordion my-3" id="categorias">
-                    <div class="accordion-item">
-                        <h2 class="accordion-header" id="headingTwo">
-                            <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#collapseTwo" aria-expanded="true" aria-controls="collapseTwo">
+                <div className="accordion my-3" id="categorias">
+                    <div className="accordion-item">
+                        <h2 className="accordion-header" id="headingTwo">
+                            <button className="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#collapseTwo" aria-expanded="true" aria-controls="collapseTwo">
                                 Categorias
                             </button>
                         </h2>
                         {tipos.map((tipo) =>(
-                        <div id="collapseTwo" class="accordion-collapse collapse show" aria-labelledby="headingTwo" data-bs-parent="#accordionExample">
-                            <div class="accordion-body">
-                                <ul class="list-group list-group-flush">
-                                    <li class="list-group-item">
+                        <div id="collapseTwo" className="accordion-collapse collapse show" aria-labelledby="headingTwo" data-bs-parent="#accordionExample">
+                            <div className="accordion-body">
+                                <ul className="list-group list-group-flush">
+                                    <li className="list-group-item">
                                     <input 
                                             onChange={filtrarTipo}
                                             type='checkbox'
@@ -151,24 +174,33 @@ const Products = () => {
                     </div>
                 </div>
             </nav>
-            <main class="container col-lg-8 col-md-8">
-            <h1 class="titulo">Productos</h1>
+            <main className="container col-lg-8 col-md-8">
+            <h1 className="titulo">Productos</h1>
             <hr></hr>
             <input value={search} onChange={searcher} type="text" placeholder='Search' className='form-control'/>
-                <div class="row row-cols-auto">
+                <div className="row row-cols-auto">
 
                     { results.map( (producto)=>(
-                        <div class="card col col-sm-6" style={{width: '18rem', margin: '1rem'}}>
-                            <div class="card-img-top">
+                        <div className="card col col-sm-6" style={{width: '18rem', margin: '1rem'}}>
+                            <div className="card-img-top">
                                 <img src={producto.URLimagen} class="card-img-top" width="100" height="300" alt="Imagen del producto"></img>
                             </div>
                             <div class="card-body">
-                                <h3 class="card-title">{producto.name}</h3>
-                                <p class="card-text"><samp style={{fontWeight: "bold", fontSize: "medium"}}>Precio: </samp>{producto.precio}</p>
-                                <p class="card-text"><samp style={{fontWeight: "bold", fontSize: "medium"}}>Tipo: </samp>{tipos.find(tipo => tipo.id === producto.tipo_id)['name']}</p>
-                                <p class="card-text"><samp style={{fontWeight: "bold", fontSize: "medium"}}>Marca: </samp>{marcas.find(marca => marca.id === producto.marca_id)['name']}</p>
-                                <p class="card-text"><samp style={{fontWeight: "bold", fontSize: "medium"}}>Descripcion: </samp>{producto.descripcion}</p>                        
+                                <h3 className="card-title">{producto.name}</h3>
+                                <p className="card-text"><samp style={{fontWeight: "bold", fontSize: "medium"}}>Precio: $</samp>{producto.precio}</p>
+                                <p className="card-text"><samp style={{fontWeight: "bold", fontSize: "medium"}}>Tipo: </samp>{tipos.find(tipo => tipo.id === producto.tipo_id)['name']}</p>
+                                <p className="card-text"><samp style={{fontWeight: "bold", fontSize: "medium"}}>Marca: </samp>{marcas.find(marca => marca.id === producto.marca_id)['name']}</p>
+                                <p className="card-text"><samp style={{fontWeight: "bold", fontSize: "medium"}}>Descripcion: </samp>{producto.descripcion}</p>                        
                             </div>
+                            {(user.email != '')?
+                            <button type="button" className="btn btn-success" style={{margin:'0.5rem'}} onClick={añadir} value={producto.id}>
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-cart-plus-fill" viewBox="0 0 16 16">
+                                    <path d="M.5 1a.5.5 0 0 0 0 1h1.11l.401 1.607 1.498 7.985A.5.5 0 0 0 4 12h1a2 2 0 1 0 0 4 2 2 0 0 0 0-4h7a2 2 0 1 0 0 4 2 2 0 0 0 0-4h1a.5.5 0 0 0 .491-.408l1.5-8A.5.5 0 0 0 14.5 3H2.89l-.405-1.621A.5.5 0 0 0 2 1H.5zM6 14a1 1 0 1 1-2 0 1 1 0 0 1 2 0zm7 0a1 1 0 1 1-2 0 1 1 0 0 1 2 0zM9 5.5V7h1.5a.5.5 0 0 1 0 1H9v1.5a.5.5 0 0 1-1 0V8H6.5a.5.5 0 0 1 0-1H8V5.5a.5.5 0 0 1 1 0z"/>
+                                </svg>                                
+                                Añadir
+                            </button>
+                            : ''
+                            }
                         </div>
                     ))
                     }
@@ -179,3 +211,5 @@ const Products = () => {
 }
 
 export default Products
+
+
