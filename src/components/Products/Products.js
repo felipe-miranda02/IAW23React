@@ -3,6 +3,8 @@ import axios from "axios";
 import { Link } from "react-router-dom";
 import "./Products.css";
 import { MyContext } from '../MyContext'; 
+import { Modal, Button, Form } from "react-bootstrap";
+import Swal from 'sweetalert2';
 
 const url ='http://127.0.0.1:8000/api/' 
 let filtrosMarca = []
@@ -17,6 +19,10 @@ const Products = () => {
     const [tipos, setTipos] = useState([]);
     const [results, setResults] = useState([]);
     const [talles, setTalles] = useState([]);
+    const [cantidad, setCantidad] = useState(1);
+    const [talle_id, setTalle_id] = useState(1);
+    const [showModal, setShowModal] = useState(false);
+    const [producto_id, setProducto_id] = useState(0);
 
      //función de búsqueda
     const searcher = (e) => {
@@ -65,6 +71,7 @@ const Products = () => {
         }
     }
 
+    //al cargar el componente
     useEffect(() => {
         getMarcas();
         getTipos();
@@ -93,24 +100,53 @@ const Products = () => {
         setTalles(respuesta.data);
     }
 
+    // añadir un producto al carrito
     const añadir = (e) => {
+        handleOpenModal();
+        setProducto_id(e.target.value);
+    }
 
-
+    const crearCompra = (e) => {
         axios.post(url + "compras/añadir", {
             email: user.email,
-            producto_id: e.target.value,
-            //talle:
-            //cantidad:
+            producto_id: producto_id,
+            talle_id: talle_id,
+            cantidad: cantidad
           })
           .then(function (response){
               console.log(response.data);
+              Swal.fire({
+                icon: 'success',
+                title: '',
+                text: 'Se ha añadido el producto a tu carrito',
+            });
+              setShowModal(false);
+              setCantidad(1);
+              setTalle_id(1);
           })
           .catch(function (error){
               console.log(error)
           })
     }
 
+    const handleCantidadChange = (e) => {
+        setCantidad(e.target.value);
+      };
+    
+      const handleTallaChange = (e) => {
+        setTalle_id(e.target.value);
+      };
+
+      const handleOpenModal = () => {
+        setShowModal(true);
+      };
+    
+      const handleCloseModal = () => {
+        setShowModal(false);
+      };    
+
     return (
+        <>
         <div className="container-fluid row flex" style={{margin: '1rem'}}>
             <nav className="col-xl-2 col-lg-3 col-md-4 col-sm-12">
                 <div className="accordion" id="Marcas">
@@ -207,6 +243,41 @@ const Products = () => {
                 </div>
             </main>
         </div>
+        
+        <Modal show={showModal} onHide={handleCloseModal}>
+         <Modal.Header closeButton>
+           <Modal.Title>Añadir al carrito</Modal.Title>
+         </Modal.Header>
+         <Modal.Body>
+           <Form>
+             <Form.Group controlId="cantidad">
+               <Form.Label>Cantidad</Form.Label>
+               <Form.Control
+                 type="number"
+                 min="1"
+                 value={cantidad}
+                 onChange={handleCantidadChange}
+               />
+             </Form.Group>
+             <Form.Group controlId="talle">
+               <Form.Label>Talle</Form.Label>
+               <Form.Control as="select" value={talle_id} onChange={handleTallaChange}>
+                {
+                    talles.map((talle) => (
+                        <option value={talle.id}>{talle.name}</option>
+                    ))
+                }
+               </Form.Control>
+             </Form.Group>
+           </Form>
+         </Modal.Body>
+         <Modal.Footer>
+           <Button variant="primary" onClick={crearCompra}>
+             Añadir al carrito
+           </Button>
+         </Modal.Footer>
+       </Modal>
+       </>
     )
 }
 
